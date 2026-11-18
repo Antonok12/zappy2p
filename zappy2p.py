@@ -1,10 +1,17 @@
 import pygame
 import os
+pygame.init()
+pygame.font.init()
+pygame.mixer.init()
 HEIGHT=500
 WIDTH=850
 
 yrbulltet=[]
 gdbullet=[]
+HEALTH_FONT=pygame.font.SysFont("comicsans",25)
+WIN_FONT=pygame.font.SysFont("comicsans",50)
+yrhealth=10
+gdhealth=10
 screen=pygame.display.set_mode((WIDTH,HEIGHT))
 BORDER=pygame.Rect(WIDTH//2-5,0,10,HEIGHT)
 space=pygame.image.load("images/spaceblu.png")
@@ -36,7 +43,21 @@ def gaddzooks_handle_movement(keys_pressed,g):
     if keys_pressed[pygame.K_DOWN] and g.y<450:
         g.y+=4
 
+def handle_bullets(yrbulltet,gbullet,yr,g):
+    global yrhealth, gdhealth
+    for bullet in yrbulltet:
+        bullet.x+=5
+        if g.colliderect(bullet):
+            yrbulltet.remove(bullet)
+            gdhealth-=1
+    for bullet in gbullet:
+        bullet.x-=5
+        if yr.colliderect(bullet):
+            gdbullet.remove(bullet)
+            yrhealth-=1
+
 while playing==True:
+
     clock.tick(60)
     for event in pygame.event.get():
         if event.type==pygame.QUIT:
@@ -44,18 +65,36 @@ while playing==True:
             pygame.quit()
         if event.type==pygame.KEYDOWN:
             if event.key==pygame.K_e:
-                bullet=pygame.Rect(yr.x,yr.y,10,5)
+                bullet=pygame.Rect(yr.x,yr.y+22,10,5)
                 yrbulltet.append(bullet)
             if event.key==pygame.K_SPACE:
-                bullet=pygame.Rect(g.x,g.y,10,6)
+                bullet=pygame.Rect(g.x,g.y+20,10,6)
                 gdbullet.append(bullet)
 
 
-    screen.blit(space,(0,0))#
+    screen.blit(space,(0,0))
     screen.blit(yooreek,(yr.x,yr.y))
     screen.blit(gaddzook,(g.x,g.y))
     pygame.draw.rect(screen,"orange",BORDER)
     keys_pressed=pygame.key.get_pressed()
     yooreek_handle_movement(keys_pressed,yr)
     gaddzooks_handle_movement(keys_pressed,g)
+    handle_bullets(yrbulltet, gdbullet,yr,g)
+    for bullet in yrbulltet:
+        pygame.draw.rect(screen,"darkseagreen1",bullet)
+    for bullet in gdbullet:
+        pygame.draw.rect(screen,"mediumpurple1",bullet)
+    yrhealth_txt=HEALTH_FONT.render("YOOREEK HEALTH:"+str(yrhealth),True,"darkseagreen1")
+    gdhealth_txt=HEALTH_FONT.render("GADZOOK HEALTH:"+str(gdhealth),True,"mediumpurple1")
+    screen.blit(yrhealth_txt,(10,10))
+    screen.blit(gdhealth_txt,(450,10))
+    if yrhealth<=0:
+        gd_win=WIN_FONT.render("GADDZOOKS WINS!!!",True,"mediumpurple1")
+        screen.blit(gd_win,(150,250))
+    elif gdhealth<=0:
+        yr_win=WIN_FONT.render("YOOREEK WINS!!!!!!!!!",True,"darkseagreen1")
+        screen.blit(yr_win,(150,250))
+        pygame.display.update()
+        pygame.time.delay(5000)
+        pygame.quit()
     pygame.display.update()   
